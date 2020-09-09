@@ -46,20 +46,24 @@ func TestUnpack(t *testing.T) {
 			expected: "aab",
 		},
 		{
-			input: "d\n5abc",
+			input:    "d\n5abc",
 			expected: "d\n\n\n\n\nabc",
 		},
 		{
-			input: "A2b3",
+			input:    "A2b3",
 			expected: "AAbbb",
 		},
 		{
-			input: "\t3",
+			input:    "\t3",
 			expected: "\t\t\t",
 		},
 		{
-			input: "asd_3l*2",
+			input:    "asd_3l*2",
 			expected: "asd___l**",
+		},
+		{
+			input:    "♪3г2f",
+			expected: "♪♪♪ггf",
 		},
 	} {
 		result, err := Unpack(tst.input)

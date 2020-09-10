@@ -16,16 +16,6 @@ type CharInfo struct {
 	originalRune rune
 }
 
-func (c *CharInfo) getInt() (int, error) {
-	digit, err := strconv.Atoi(c.str)
-
-	if err != nil {
-		return -1, err
-	}
-
-	return digit, nil
-}
-
 // Unpack - Function for string unpacking
 // Use it to convert string like "ab4cd2" to "abbbbcdd".
 func Unpack(str string) (string, error) {
@@ -71,7 +61,7 @@ func Unpack(str string) (string, error) {
 			for _, ch := range charInfoBufferExcludingLastChar {
 				b.WriteString(ch.str)
 			}
-			digit, _ := charInfo.getInt()
+			digit, _ := strconv.Atoi(charInfo.str)
 			if digit > 0 {
 				b.WriteString(strings.Repeat(lastBufferChar.str, digit))
 			}

@@ -7,7 +7,7 @@ import (
 )
 
 // Change to true if needed
-var taskWithAsteriskIsCompleted = false
+var taskWithAsteriskIsCompleted = true
 
 var text = `Как видите, он  спускается  по  лестнице  вслед  за  своим
 	другом   Кристофером   Робином,   головой   вниз,  пересчитывая
@@ -56,5 +56,17 @@ func TestTop10(t *testing.T) {
 			expected := []string{"он", "и", "а", "что", "ты", "не", "если", "-", "то", "Кристофер"}
 			require.ElementsMatch(t, expected, Top10(text))
 		}
+	})
+
+	t.Run("no words in dash string", func(t *testing.T) {
+		require.Len(t, Top10(" — --"), 0)
+	})
+
+	t.Run("quotes should be ignored", func(t *testing.T) {
+		text := `
+			Some long and beautiful text, which include the most clever words, and it sounds like "Foo foo"
+		`
+		expected := []string{"foo", "and"}
+		require.Subset(t, Top10(text), expected)
 	})
 }

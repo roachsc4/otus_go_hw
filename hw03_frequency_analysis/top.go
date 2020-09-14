@@ -7,7 +7,7 @@ import (
 
 // preprocessText - cleans text from \t and \n symbols for easier splitting.
 func preprocessText(text string) string {
-	return strings.Replace(strings.Replace(text, "\t", " ", -1), "\n", " ", -1)
+	return strings.ReplaceAll(strings.ReplaceAll(text, "\t", " "), "\n", " ")
 }
 
 // preprocessWord - normalizes word to lower case and deletes redundant characters.

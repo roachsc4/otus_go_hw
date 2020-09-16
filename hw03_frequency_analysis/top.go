@@ -7,7 +7,7 @@ import (
 
 // preprocessText - cleans text from \t and \n symbols for easier splitting.
 func preprocessText(text string) string {
-	return strings.ReplaceAll(strings.ReplaceAll(text, "\t", " "), "\n", " ")
+	return strings.ReplaceAll(text, "\n\t", " ")
 }
 
 // preprocessWord - normalizes word to lower case and deletes redundant characters.
@@ -17,24 +17,13 @@ func preprocessWord(word string) string {
 	return word
 }
 
-// Top10 - function for finding top-10 most frequent words in a text.
-// Initially text goes through preprocessing, word-normalizing.
-func Top10(text string) []string {
-	if text == "" {
-		return make([]string, 0)
-	}
-	// Accepted word expression looks like "abc-dfg", where "-" is optional
-	wordRegexp := regexp.MustCompile("[a-zA-Zа-яА-Я]+(-[a-zA-Zа-яА-Я]+)?")
+type WordCounterMap map[string]int
 
-	// Preprocessing whole text
-	text = preprocessText(text)
+// Count occurrences for all words and place it to map.
+func CalculateWordCounterMap(words []string) WordCounterMap {
+	wordCountMap := make(WordCounterMap)
 
-	// Splitting text to words and initializing helper variables
-	splittedText := strings.Split(text, " ")
-	top10Words := make([]string, 0, len(splittedText))
-	wordCountMap := make(map[string]int)
-
-	for _, word := range splittedText {
+	for _, word := range words {
 		if word == "" {
 			continue
 		}
@@ -42,15 +31,18 @@ func Top10(text string) []string {
 		if !wordRegexp.MatchString(word) {
 			continue
 		}
-		_, wordExists := wordCountMap[word]
-		// If words appears for the first time, append it to resulting slice
-		if !wordExists {
-			top10Words = append(top10Words, word)
-		}
-		// In both cases we should count this word
 		wordCountMap[word]++
 	}
 
+	return wordCountMap
+}
+
+// Get slice of Top-10 words sorted by occurrences rate.
+func GetTop10WordsFromWordCounterMap(wordCountMap WordCounterMap) []string {
+	top10Words := make([]string, 0, len(wordCountMap))
+	for word := range wordCountMap {
+		top10Words = append(top10Words, word)
+	}
 	sort.Slice(top10Words, func(i, j int) bool {
 		return wordCountMap[top10Words[i]] > wordCountMap[top10Words[j]]
 	})
@@ -60,4 +52,20 @@ func Top10(text string) []string {
 	}
 
 	return top10Words
+}
+
+// Accepted word expression looks like "abc-dfg", where "-" is optional.
+var wordRegexp = regexp.MustCompile("[a-zA-Zа-яА-Я]+(-[a-zA-Zа-яА-Я]+)?")
+
+// Top10 - function for finding Top-10 most frequent words in a text.
+// Initially text goes through preprocessing, word-normalizing, counting and filling Top-10 words slice.
+func Top10(text string) []string {
+	if text == "" {
+		return nil
+	}
+	// Preprocessing whole text
+	text = preprocessText(text)
+	// Splitting text to words and initializing helper variables
+	wordCountMap := CalculateWordCounterMap(strings.Split(text, " "))
+	return GetTop10WordsFromWordCounterMap(wordCountMap)
 }

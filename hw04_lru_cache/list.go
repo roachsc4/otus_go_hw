@@ -11,9 +11,10 @@ type List interface {
 }
 
 type listItem struct {
-	Value interface{}
+	value interface{}
 	Next  *listItem
 	Prev  *listItem
+	list  *list
 }
 
 type list struct {
@@ -39,7 +40,7 @@ func (l *list) PushFront(v interface{}) *listItem {
 	// In the end of operation we need to increase list length
 	defer func() { l.length++ }()
 
-	newItem := &listItem{Value: v}
+	newItem := &listItem{value: v, list: l}
 
 	// Consider the case when head of list is nil
 	if l.head == nil {
@@ -63,7 +64,7 @@ func (l *list) PushFront(v interface{}) *listItem {
 func (l *list) PushBack(v interface{}) *listItem {
 	defer func() { l.length++ }()
 
-	newItem := &listItem{Value: v}
+	newItem := &listItem{value: v, list: l}
 	// Consider the case when tail of list is nil
 	if l.tail == nil {
 		// If tail is nil, new item must be set as head and tail
@@ -84,6 +85,10 @@ func (l *list) PushBack(v interface{}) *listItem {
 // Remove - removes item from list.
 // Removal is achieved by redirecting links of neighbour items and clearing links of target item.
 func (l *list) Remove(i *listItem) {
+	// List can remove only it's own items
+	if i.list != l {
+		return
+	}
 	// If target item is not head, than its "prev" item should be linked to target item's "next" item.
 	// Otherwise head should be set to target item's next item
 	if i.Prev != nil {
@@ -108,6 +113,10 @@ func (l *list) Remove(i *listItem) {
 }
 
 func (l *list) MoveToFront(i *listItem) {
+	// List can move only it's own items
+	if i.list != l {
+		return
+	}
 	// If target item is head item - no need to do anything
 	if i == l.head {
 		return

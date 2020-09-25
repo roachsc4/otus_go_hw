@@ -26,7 +26,7 @@ func (lru *lruCache) Set(key Key, value interface{}) bool {
 	// If key is already presented in cache - just update it's value and move to the front of queue
 	// (make it most "hot" item)
 	if keyExists {
-		item.Value = cacheItem{Key: key, Value: value}
+		item.value = cacheItem{Key: key, Value: value}
 		lru.queue.MoveToFront(item)
 	} else {
 		// Otherwise new queue item is created and pushed to the front of the queue,
@@ -38,8 +38,7 @@ func (lru *lruCache) Set(key Key, value interface{}) bool {
 		if lru.queue.Len() > lru.capacity {
 			lastItem := lru.queue.Back()
 			lru.queue.Remove(lastItem)
-			lastItemCacheValue, _ := lastItem.Value.(cacheItem)
-			delete(lru.items, lastItemCacheValue.Key)
+			delete(lru.items, lastItem.value.(cacheItem).Key)
 		}
 	}
 	return keyExists
@@ -55,16 +54,13 @@ func (lru *lruCache) Get(key Key) (interface{}, bool) {
 	// If key is presented in cache, than it must be set as the most "hot" and returned
 	if keyExists {
 		lru.queue.MoveToFront(item)
-		cacheEntry, _ := item.Value.(cacheItem)
-		return cacheEntry.Value, true
+		return item.value.(cacheItem).Value, true
 	}
 	return nil, false
 }
 
 func (lru *lruCache) Clear() {
-	for key := range lru.items {
-		delete(lru.items, key)
-	}
+	lru.items = make(map[Key]*listItem)
 	lru.queue = &list{}
 }
 

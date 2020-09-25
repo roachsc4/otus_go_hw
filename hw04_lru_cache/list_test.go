@@ -36,15 +36,15 @@ func TestList(t *testing.T) {
 		} // [80, 60, 40, 10, 30, 50, 70]
 
 		require.Equal(t, 7, l.Len())
-		require.Equal(t, 80, l.Front().Value)
-		require.Equal(t, 70, l.Back().Value)
+		require.Equal(t, 80, l.Front().value)
+		require.Equal(t, 70, l.Back().value)
 
 		l.MoveToFront(l.Front()) // [80, 60, 40, 10, 30, 50, 70]
 		l.MoveToFront(l.Back())  // [70, 80, 60, 40, 10, 30, 50]
 
 		elems := make([]int, 0, l.Len())
 		for i := l.Front(); i != nil; i = i.Next {
-			elems = append(elems, i.Value.(int))
+			elems = append(elems, i.value.(int))
 		}
 		require.Equal(t, []int{70, 80, 60, 40, 10, 30, 50}, elems)
 	})
@@ -76,5 +76,17 @@ func TestList(t *testing.T) {
 
 		l.MoveToFront(firstItem) // 10, 20, 30
 		require.Equal(t, firstItem, l.Front())
+	})
+
+	t.Run("operation with alien items", func(t *testing.T) {
+		l1 := NewList()
+		l2 := NewList()
+
+		l1Item := l1.PushFront(1)
+		l2Item := l2.PushFront(2)
+		l2.Remove(l1Item)
+		l2.MoveToFront(l1Item)
+		require.Equal(t, l1Item, l1.Front())
+		require.Equal(t, l2Item, l2.Front())
 	})
 }

@@ -3,7 +3,6 @@ package hw05_parallel_execution //nolint:golint,stylecheck
 import (
 	"errors"
 	"sync"
-	"sync/atomic"
 )
 
 var ErrErrorsLimitExceeded = errors.New("errors limit exceeded")
@@ -12,16 +11,21 @@ type Task func() error
 
 // errorsCounter encapsulates processing of errors count.
 type errorsCounter struct {
-	counter    int64
-	errorLimit int64
+	mu         sync.Mutex
+	counter    int
+	errorLimit int
 }
 
-func (ec errorsCounter) HasReachedLimit() bool {
+func (ec *errorsCounter) HasReachedLimit() bool {
+	defer ec.mu.Unlock()
+	ec.mu.Lock()
 	return ec.counter > ec.errorLimit
 }
 
 func (ec *errorsCounter) Increase() {
-	atomic.AddInt64(&ec.counter, 1)
+	defer ec.mu.Unlock()
+	ec.mu.Lock()
+	ec.counter++
 }
 
 type Worker struct {
@@ -60,7 +64,7 @@ func putTasksIntoChannel(tasks []Task, channel chan<- Task) {
 func Run(tasks []Task, N int, M int) error { //nolint:gocritic
 	errorsCounter := &errorsCounter{
 		counter:    0,
-		errorLimit: int64(M),
+		errorLimit: M,
 	}
 
 	tasksChannel := make(chan Task, len(tasks))

@@ -32,7 +32,13 @@ func ExecutePipeline(in In, done In, stages ...Stage) Out {
 					if !ok {
 						return
 					}
-					sentinelChannel <- v
+
+					select {
+					case sentinelChannel <- v:
+						continue
+					case <-done:
+						return
+					}
 				case <-done:
 					return
 				}

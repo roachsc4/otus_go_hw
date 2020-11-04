@@ -49,12 +49,11 @@ func TestCopy(t *testing.T) {
 		},
 	} {
 		t.Run(fmt.Sprintf("Limit: %d, Offset: %d", tst.limit, tst.offset), func(t *testing.T) {
-			err := Copy("testdata/input.txt", "/tmp/output.txt", tst.offset, tst.limit)
+			targetFile, err := ioutil.TempFile("", "output")
 			require.NoError(t, err)
-
-			targetFile, err := os.Open("/tmp/output.txt")
 			defer os.Remove(targetFile.Name())
-			defer targetFile.Close()
+
+			err = Copy("testdata/input.txt", targetFile.Name(), tst.offset, tst.limit)
 			require.NoError(t, err)
 
 			checkFile, _ := os.Open(tst.checkFileName)

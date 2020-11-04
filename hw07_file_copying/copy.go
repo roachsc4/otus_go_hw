@@ -45,6 +45,11 @@ func Copy(fromPath string, toPath string, offset, limit int64) error {
 
 	// Create source file reader
 	fromFileReader := io.LimitReader(fromFile, needToWrite)
+	// Set offset
+	_, err = fromFile.Seek(offset, 0)
+	if err != nil {
+		return fmt.Errorf("failed to set offset to -from file: %w", err)
+	}
 	// Create target file
 	targetFile, err := os.Create(toPath)
 	if err != nil {
@@ -53,11 +58,6 @@ func Copy(fromPath string, toPath string, offset, limit int64) error {
 	defer targetFile.Close()
 	// Create target file writer connected to progress-bar
 	toFileWriter := bar.NewProxyWriter(targetFile)
-	// Set offset
-	_, err = fromFile.Seek(offset, 0)
-	if err != nil {
-		return fmt.Errorf("failed to set offset to -from file: %w", err)
-	}
 	// Copy content from source file to target file
 	_, err = io.CopyN(toFileWriter, fromFileReader, needToWrite)
 	if err != nil {

@@ -33,9 +33,7 @@ func RunCmd(cmd []string, env Environment) (returnCode int) {
 
 	command.Env = os.Environ()
 	err := command.Run()
-	//if exitErr, ok := err.(*exec.ExitError); ok {
-	//	return exitErr.ExitCode()
-	//}
+
 	var exitError *exec.ExitError
 	if errors.As(err, &exitError) {
 		return exitError.ExitCode()

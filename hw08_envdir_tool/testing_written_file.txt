@@ -1,0 +1,4 @@
+"hello"
+foo with new line
+
+bar

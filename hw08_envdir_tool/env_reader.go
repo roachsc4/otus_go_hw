@@ -3,6 +3,7 @@ package main
 import (
 	"bufio"
 	"bytes"
+	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -15,14 +16,14 @@ type Environment map[string]string
 
 func processBytesValue(value []byte) []byte {
 	value = bytes.TrimRight(value, " \t\n")
-	value = bytes.Replace(value, []byte("\x00"), []byte("\n"), -1)
+	value = bytes.ReplaceAll(value, []byte("\x00"), []byte("\n"))
 	return value
 }
 
 func readFirstLineOfFile(file *os.File) ([]byte, error) {
 	reader := bufio.NewReader(file)
 	value, err := reader.ReadBytes('\n')
-	if err != nil && err != io.EOF {
+	if err != nil && !errors.Is(err, io.EOF) {
 		return nil, fmt.Errorf("error while reading first line of %s: %w", file.Name(), err)
 	}
 	return value, nil

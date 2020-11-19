@@ -2,7 +2,6 @@ package main
 
 import (
 	"bufio"
-	"bytes"
 	"errors"
 	"fmt"
 	"io"
@@ -14,17 +13,17 @@ import (
 
 type Environment map[string]string
 
-func processBytesValue(value []byte) []byte {
-	value = bytes.TrimRight(value, " \t\n")
-	value = bytes.ReplaceAll(value, []byte("\x00"), []byte("\n"))
+func processValue(value string) string {
+	value = strings.TrimRight(value, " \t\n")
+	value = strings.ReplaceAll(value, "\x00", "\n")
 	return value
 }
 
-func readFirstLineOfFile(file *os.File) ([]byte, error) {
+func readFirstLineOfFile(file *os.File) (string, error) {
 	reader := bufio.NewReader(file)
-	value, err := reader.ReadBytes('\n')
+	value, err := reader.ReadString('\n')
 	if err != nil && !errors.Is(err, io.EOF) {
-		return nil, fmt.Errorf("error while reading first line of %s: %w", file.Name(), err)
+		return "", fmt.Errorf("error while reading first line of %s: %w", file.Name(), err)
 	}
 	return value, nil
 }
@@ -43,9 +42,9 @@ func getValueFromFile(dir, fileName string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	value = processBytesValue(value)
+	value = processValue(value)
 
-	return string(value), nil
+	return value, nil
 }
 
 // ReadDir reads a specified directory and returns map of env variables.

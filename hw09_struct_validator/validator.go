@@ -25,7 +25,7 @@ func (v ValidationErrors) Error() string {
 	builder.Grow(len(v))
 
 	for _, err := range v {
-		builder.WriteString(fmt.Sprintf("Field: %s, error: %s\n", err.Field, err.Err))
+		builder.WriteString("Field: " + err.Field + ", error: " + err.Err.Error() + "\n")
 	}
 
 	return builder.String()
@@ -35,20 +35,20 @@ func CreateValidator(validatorName, fieldType string) (validators.Validator, err
 	if fieldType == "string" {
 		switch validatorName {
 		case "len":
-			return &validators.StringLengthValidator{}, nil
+			return new(validators.StringLengthValidator), nil
 		case "regexp":
-			return &validators.RegexpValidator{}, nil
+			return new(validators.RegexpValidator), nil
 		case "in":
-			return &validators.StringInValidator{}, nil
+			return new(validators.StringInValidator), nil
 		}
 	} else if fieldType == "int" {
 		switch validatorName {
 		case "min":
-			return &validators.MinValidator{}, nil
+			return new(validators.MinValidator), nil
 		case "max":
-			return &validators.MaxValidator{}, nil
+			return new(validators.MaxValidator), nil
 		case "in":
-			return &validators.IntInValidator{}, nil
+			return new(validators.IntInValidator), nil
 		}
 	}
 	return nil, fmt.Errorf("unknown validator %s for fieldType %s", validatorName, fieldType)

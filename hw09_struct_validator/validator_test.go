@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/roachsc4/otus_go_hw/hw09_struct_validator/validators"
 	"github.com/stretchr/testify/require"
 )
 
@@ -91,11 +92,19 @@ func TestValidate(t *testing.T) {
 func TestValidateWithErrors(t *testing.T) {
 	tests := []struct {
 		in          interface{}
-		expectedErr string
+		expectedErr error
 	}{
 		{
 			App{Version: "1"},
-			"Field: Version, error: string length is 1, but length 5 is required\n",
+			ValidationErrors{
+				ValidationError{
+					Field: "Version",
+					Err: &validators.StringLengthError{
+						Value:          "1",
+						RequiredLength: 5,
+					},
+				},
+			},
 		},
 		{
 			User{
@@ -107,30 +116,84 @@ func TestValidateWithErrors(t *testing.T) {
 				Phones: []string{""},
 				meta:   nil,
 			},
-			`Field: ID, error: string length is 4, but length 36 is required
-Field: Age, error: int 16 must be greater or equal than 18
-Field: Email, error: string wrong_email doesn't fit pattern ^\w+@\w+\.\w+$
-Field: Role, error: string batman doesn't fit allowed set map[admin:{} stuff:{}]
-Field: Phones, error: string length is 0, but length 11 is required
-`,
+			ValidationErrors{
+				ValidationError{
+					Field: "ID",
+					Err: &validators.StringLengthError{
+						Value:          "abcd",
+						RequiredLength: 36,
+					},
+				},
+				ValidationError{
+					Field: "Age",
+					Err: &validators.MinValidatorError{
+						Value:    16,
+						MinValue: 18,
+					},
+				},
+				ValidationError{
+					Field: "Email",
+					Err: &validators.RegexpError{
+						Value:               "wrong_email",
+						RegexpPatternString: `^\w+@\w+\.\w+$`,
+					},
+				},
+				ValidationError{
+					Field: "Role",
+					Err: &validators.StringInError{
+						Value: "batman",
+						AllowedValues: map[string]struct{}{
+							"admin": {},
+							"stuff": {},
+						},
+					},
+				},
+				ValidationError{
+					Field: "Phones",
+					Err: &validators.StringLengthError{
+						Value:          "",
+						RequiredLength: 11,
+					},
+				},
+			},
 		},
 		{
 			Response{
 				Code: 123,
 				Body: "{}",
 			},
-			"Field: Code, error: int 123 doesn't fit allowed set map[200:{} 404:{} 500:{}]\n",
+			ValidationErrors{
+				ValidationError{
+					Field: "Code",
+					Err: &validators.IntInError{
+						Value: 123,
+						AllowedValues: map[int]struct{}{
+							200: {},
+							404: {},
+							500: {},
+						},
+					},
+				},
+			},
 		},
 		{
 			Counter{Counter: 150},
-			"Field: Counter, error: int 150 must be equal to or lesser than 100\n",
+			ValidationErrors{
+				ValidationError{
+					Field: "Counter",
+					Err: &validators.MaxValidatorError{
+						Value:    150,
+						MaxValue: 100,
+					},
+				},
+			},
 		},
 	}
 
 	for i, tt := range tests {
 		t.Run(fmt.Sprintf("case %d", i), func(t *testing.T) {
 			err := Validate(tt.in)
-			require.EqualError(t, err, tt.expectedErr)
+			require.Equal(t, err, tt.expectedErr)
 		})
 	}
 }

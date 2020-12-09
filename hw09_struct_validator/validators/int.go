@@ -6,6 +6,42 @@ import (
 	"strings"
 )
 
+type MinValidatorError struct {
+	Value    int
+	MinValue int
+}
+
+func (e *MinValidatorError) Error() string {
+	return fmt.Sprintf(
+		"int %d must be greater or equal than %d",
+		e.Value,
+		e.MinValue)
+}
+
+type MaxValidatorError struct {
+	Value    int
+	MaxValue int
+}
+
+func (e *MaxValidatorError) Error() string {
+	return fmt.Sprintf(
+		"int %d must be equal to or lesser than %d",
+		e.Value,
+		e.MaxValue)
+}
+
+type IntInError struct {
+	Value         int
+	AllowedValues map[int]struct{}
+}
+
+func (e *IntInError) Error() string {
+	return fmt.Sprintf(
+		"int %d doesn't fit allowed set %v",
+		e.Value,
+		e.AllowedValues)
+}
+
 type MinValidator struct {
 	minValue int
 }
@@ -23,14 +59,14 @@ func (v *MinValidator) Init(validatorValue string) error {
 func (v MinValidator) Validate(valueToValidate interface{}) error {
 	intToValidate, ok := valueToValidate.(int)
 	if !ok {
-		return fmt.Errorf("unexpected value %v", valueToValidate)
+		return fmt.Errorf("unexpected Value %v", valueToValidate)
 	}
 
 	if intToValidate < v.minValue {
-		return fmt.Errorf(
-			"int %d must be greater or equal than %d",
-			valueToValidate,
-			v.minValue)
+		return &MinValidatorError{
+			Value:    intToValidate,
+			MinValue: v.minValue,
+		}
 	}
 	return nil
 }
@@ -52,14 +88,14 @@ func (v *MaxValidator) Init(validatorValue string) error {
 func (v MaxValidator) Validate(valueToValidate interface{}) error {
 	intToValidate, ok := valueToValidate.(int)
 	if !ok {
-		return fmt.Errorf("unexpected value %v", valueToValidate)
+		return fmt.Errorf("unexpected Value %v", valueToValidate)
 	}
 
 	if intToValidate > v.maxValue {
-		return fmt.Errorf(
-			"int %d must be equal to or lesser than %d",
-			valueToValidate,
-			v.maxValue)
+		return &MaxValidatorError{
+			Value:    intToValidate,
+			MaxValue: v.maxValue,
+		}
 	}
 	return nil
 }
@@ -84,12 +120,15 @@ func (v *IntInValidator) Init(validatorValue string) error {
 func (v IntInValidator) Validate(valueToValidate interface{}) error {
 	intToValidate, ok := valueToValidate.(int)
 	if !ok {
-		return fmt.Errorf("unexpected value %v", valueToValidate)
+		return fmt.Errorf("unexpected Value %v", valueToValidate)
 	}
 
 	_, valueIsAllowed := v.allowedValues[intToValidate]
 	if !valueIsAllowed {
-		return fmt.Errorf("int %d doesn't fit allowed set %v", intToValidate, v.allowedValues)
+		return &IntInError{
+			Value:         intToValidate,
+			AllowedValues: v.allowedValues,
+		}
 	}
 	return nil
 }

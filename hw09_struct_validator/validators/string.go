@@ -7,6 +7,42 @@ import (
 	"strings"
 )
 
+type StringLengthError struct {
+	Value          string
+	RequiredLength int
+}
+
+func (e *StringLengthError) Error() string {
+	return fmt.Sprintf(
+		"string length is %d, but length %d is required",
+		len(e.Value),
+		e.RequiredLength)
+}
+
+type RegexpError struct {
+	Value               string
+	RegexpPatternString string
+}
+
+func (e *RegexpError) Error() string {
+	return fmt.Sprintf(
+		"string %s doesn't fit pattern %s",
+		e.Value,
+		e.RegexpPatternString)
+}
+
+type StringInError struct {
+	Value         string
+	AllowedValues map[string]struct{}
+}
+
+func (e *StringInError) Error() string {
+	return fmt.Sprintf(
+		"string %s doesn't fit allowed set %v",
+		e.Value,
+		e.AllowedValues)
+}
+
 type StringLengthValidator struct {
 	requiredLength int
 }
@@ -25,10 +61,10 @@ func (v StringLengthValidator) Validate(valueToValidate interface{}) error {
 	stringToValidate := fmt.Sprintf("%v", valueToValidate)
 
 	if len(stringToValidate) != v.requiredLength {
-		return fmt.Errorf(
-			"string length is %d, but length %d is required",
-			len(stringToValidate),
-			v.requiredLength)
+		return &StringLengthError{
+			Value:          stringToValidate,
+			RequiredLength: v.requiredLength,
+		}
 	}
 	return nil
 }
@@ -46,7 +82,10 @@ func (v RegexpValidator) Validate(valueToValidate interface{}) error {
 	stringToValidate := fmt.Sprintf("%v", valueToValidate)
 	matched := v.regexpPattern.MatchString(stringToValidate)
 	if !matched {
-		return fmt.Errorf("string %s doesn't fit pattern %s", stringToValidate, v.regexpPattern)
+		return &RegexpError{
+			Value:               stringToValidate,
+			RegexpPatternString: v.regexpPattern.String(),
+		}
 	}
 	return nil
 }
@@ -68,7 +107,10 @@ func (v StringInValidator) Validate(valueToValidate interface{}) error {
 	stringToValidate := fmt.Sprintf("%v", valueToValidate)
 	_, valueIsAllowed := v.allowedValues[stringToValidate]
 	if !valueIsAllowed {
-		return fmt.Errorf("string %s doesn't fit allowed set %v", stringToValidate, v.allowedValues)
+		return &StringInError{
+			Value:         stringToValidate,
+			AllowedValues: v.allowedValues,
+		}
 	}
 	return nil
 }

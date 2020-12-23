@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"fmt"
 	"io"
+	"log"
 	"net"
 	"time"
 )
@@ -58,6 +59,7 @@ func (tc *TCPClient) Send() error {
 
 func (tc *TCPClient) Receive() error {
 	data, connErr := tc.connReader.ReadBytes('\n')
+	log.Println("data received: ", data)
 	_, outWriteErr := tc.out.Write(data)
 	if connErr != nil {
 		return fmt.Errorf("error during receiving data: %w", connErr)

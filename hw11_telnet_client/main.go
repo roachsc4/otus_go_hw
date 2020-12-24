@@ -11,15 +11,16 @@ import (
 )
 
 func main() {
-	if len(os.Args) < 3 {
-		log.Fatal("Correct usage: telnet host port [--timeout=2s]")
-	}
 	timeout := flag.Duration("timeout", 10000000, "use it to specify dial timeout")
 	flag.Parse()
+	positinalArgs := flag.Args()
 
-	log.Println(os.Args[1:])
-	host := os.Args[2]
-	port := os.Args[3]
+	if len(positinalArgs) != 2 {
+		log.Fatal("Correct usage: telnet host port [--timeout=2s]")
+	}
+
+	host := positinalArgs[0]
+	port := positinalArgs[1]
 	address := net.JoinHostPort(host, port)
 	log.Println(address)
 	client := NewTelnetClient(
@@ -35,41 +36,35 @@ func main() {
 	}
 	log.Printf("Connected to %s...", address)
 	sigintChannel := make(chan os.Signal, 1)
-	doneCh := make(chan struct{})
+	doneCh := make(chan int)
 
 	signal.Notify(sigintChannel, syscall.SIGINT)
 
 	go func() {
 		<-sigintChannel
 		fmt.Println("Got SIGINT")
-		doneCh <- struct{}{}
+		doneCh <- 3
 	}()
 
 	go func() {
 		log.Println("Start receiving")
-		for {
-			err := client.Receive()
-			if err != nil {
-				log.Println("Error during receive: ", err)
-				break
-			}
-			log.Println("Data received")
+		err := client.Receive()
+		if err != nil {
+			log.Println("Error during receive: ", err)
 		}
-		doneCh <- struct{}{}
+		log.Println("Stop receiving")
+		doneCh <- 1
 	}()
 
 	go func() {
 		log.Println("Start sending")
-		for {
-			err := client.Send()
-			if err != nil {
-				log.Println("Error during send: ", err)
-				break
-			}
-			log.Println("Data sent")
+		err := client.Send()
+		if err != nil {
+			log.Println("Error during send: ", err)
 		}
-		doneCh <- struct{}{}
+		log.Println("Stop sending")
+		doneCh <- 2
 	}()
 
-	<-doneCh
+	log.Println(<-doneCh)
 }

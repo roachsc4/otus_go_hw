@@ -29,6 +29,7 @@ func main() {
 		os.Stdout)
 
 	err := client.Connect()
+	defer client.Close()
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -41,20 +42,15 @@ func main() {
 	go func() {
 		<-sigintChannel
 		fmt.Println("Got SIGINT")
-		err := client.Close()
-		if err != nil {
-			log.Fatal(err)
-		}
 		doneCh <- struct{}{}
 	}()
 
 	go func() {
-		defer client.Close()
 		log.Println("Start receiving")
 		for {
 			err := client.Receive()
 			if err != nil {
-				log.Println(err)
+				log.Println("Error during receive: ", err)
 				break
 			}
 			log.Println("Data received")
@@ -63,12 +59,11 @@ func main() {
 	}()
 
 	go func() {
-		defer client.Close()
 		log.Println("Start sending")
 		for {
 			err := client.Send()
 			if err != nil {
-				log.Println(err)
+				log.Println("Error during send: ", err)
 				break
 			}
 			log.Println("Data sent")

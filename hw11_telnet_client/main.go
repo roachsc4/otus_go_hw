@@ -32,7 +32,8 @@ func main() {
 	err := client.Connect()
 	defer client.Close()
 	if err != nil {
-		log.Fatal(err)
+		log.Println(err)
+		return
 	}
 	log.Printf("Connected to %s...", address)
 	sigintChannel := make(chan os.Signal, 1)

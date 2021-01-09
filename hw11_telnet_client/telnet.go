@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"io"
-	"log"
 	"net"
 	"time"
 )
@@ -25,6 +24,15 @@ type TCPClient struct {
 	conn net.Conn
 }
 
+func NewTelnetClient(address string, timeout time.Duration, in io.ReadCloser, out io.Writer) TelnetClient {
+	return &TCPClient{
+		address: address,
+		timeout: timeout,
+		in:      in,
+		out:     out,
+	}
+}
+
 func (tc *TCPClient) Connect() error {
 	conn, err := net.DialTimeout("tcp", tc.address, tc.timeout)
 	if err != nil {
@@ -35,7 +43,6 @@ func (tc *TCPClient) Connect() error {
 }
 
 func (tc *TCPClient) Close() error {
-	log.Println("CLosed")
 	err := tc.conn.Close()
 	if err != nil {
 		return fmt.Errorf("error on closing client: %w", err)
@@ -57,13 +64,4 @@ func (tc *TCPClient) Receive() error {
 		return fmt.Errorf("error while receiving: %w", err)
 	}
 	return nil
-}
-
-func NewTelnetClient(address string, timeout time.Duration, in io.ReadCloser, out io.Writer) TelnetClient {
-	return &TCPClient{
-		address: address,
-		timeout: timeout,
-		in:      in,
-		out:     out,
-	}
 }

@@ -12,17 +12,16 @@ import (
 
 func main() {
 	timeout := flag.Duration("timeout", 10000000, "use it to specify dial timeout")
-	flag.Parse()
-	positinalArgs := flag.Args()
-
-	if len(positinalArgs) != 2 {
-		log.Fatal("Correct usage: telnet host port [--timeout=2s]")
+	flag.Usage = func() {
+		fmt.Fprint(flag.CommandLine.Output(), "Correct usage: telnet host port [--timeout=2s]\n")
 	}
+	flag.Parse()
+	flag.Usage()
+	positionalArgs := flag.Args()
 
-	host := positinalArgs[0]
-	port := positinalArgs[1]
+	host := positionalArgs[0]
+	port := positionalArgs[1]
 	address := net.JoinHostPort(host, port)
-	log.Println(address)
 	client := NewTelnetClient(
 		address,
 		*timeout,
@@ -30,11 +29,11 @@ func main() {
 		os.Stdout)
 
 	err := client.Connect()
-	defer client.Close()
 	if err != nil {
 		log.Println(err)
 		return
 	}
+	defer client.Close()
 	log.Printf("Connected to %s...", address)
 	sigintChannel := make(chan os.Signal, 1)
 	doneCh := make(chan int)
@@ -43,7 +42,10 @@ func main() {
 
 	go func() {
 		<-sigintChannel
-		fmt.Println("Got SIGINT")
+		_, err := os.Stderr.WriteString("Got SIGINT")
+		if err != nil {
+			log.Fatal(err)
+		}
 		doneCh <- 3
 	}()
 
